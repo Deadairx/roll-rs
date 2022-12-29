@@ -1,31 +1,38 @@
+use regex::Regex;
 use rand::{thread_rng, Rng};
 use std::env;
 
-fn roll_dice(num_dice: u32, num_sides: u32, modifier: i32) -> i32 {
+fn roll_dice(num_dice: u32, num_sides: u32, drop_action: char, modifier: i32) -> i32 {
     let mut rng = thread_rng();
-    let mut result = 0;
+    let mut dice = Vec::new();
     for _ in 0..num_dice {
-        result += rng.gen_range(1..num_sides + 1) as i32;
+        dice.push(rng.gen_range(1..num_sides + 1) as i32);
     }
-    result += modifier;
-    result
+    println!("drop: {}", drop_action);
+    println!("rolls: {:?}", dice);
+    if drop_action == 'L' {
+        dice.sort();
+        dice.reverse();
+        dice.pop();
+    } else if drop_action == 'H' {
+        dice.sort();
+        dice.pop();
+    }
+    println!("dice count: {}", dice.len());
+    let result: i32 = dice.iter().sum();
+    result + modifier
 }
 
-fn parse_dice_notation(notation: &str) -> (u32, u32, i32) {
-    let parts: Vec<&str> = notation.split("d").collect();
-    let num_dice = parts[0].parse().unwrap();
-    let num_sides;
-    let mut modifier: i32 = 0;
-    if let Some(index) = parts[1].find('+') {
-        num_sides = parts[1][..index].parse().unwrap();
-        modifier = parts[1][index + 1..].parse().unwrap();
-    } else if let Some(index) = parts[1].find('-') {
-        num_sides = parts[1][..index].parse().unwrap();
-        modifier = -1 * parts[1][index + 1..].parse::<i32>().unwrap() as i32;
-    } else {
-        num_sides = parts[1].parse().unwrap();
-    }
-    (num_dice, num_sides, modifier)
+/// Takes a Dice Notation string and parses out the number of dice, number of sides and
+/// modifications to be made with the roll 
+fn parse_dice_notation(notation: &str) -> (u32, u32, char, i32) {
+    let re = Regex::new(r"(\d+)d(\d+)([LH]?)([+-]?\d+)?").unwrap();
+    let captures = re.captures(notation).unwrap();
+    let num_dice = captures[1].parse().unwrap();
+    let num_sides = captures[2].parse().unwrap();
+    let drop_action = captures.get(3).map(|s| s.as_str()).unwrap_or(" ").chars().next().unwrap();
+    let modifier = captures.get(4).map(|s| s.as_str().parse().unwrap()).unwrap_or(0);
+    (num_dice, num_sides, drop_action, modifier)
 }
 
 fn main() {
@@ -35,7 +42,7 @@ fn main() {
         return;
     }
     let notation = &args[1];
-    let (num_dice, num_sides, modifier) = parse_dice_notation(notation);
-    let result = roll_dice(num_dice, num_sides, modifier);
+    let (num_dice, num_sides, drop_action, modifier) = parse_dice_notation(notation);
+    let result = roll_dice(num_dice, num_sides, drop_action, modifier);
     println!("Result: {}", result);
 }
