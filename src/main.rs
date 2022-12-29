@@ -30,7 +30,7 @@ fn parse_dice_notation(notation: &str) -> (u32, u32, char, i32) {
     let captures = re.captures(notation).unwrap();
     let num_dice = captures[1].parse().unwrap();
     let num_sides = captures[2].parse().unwrap();
-    let drop_action = captures.get(3).map(|s| s.as_str()).unwrap_or(" ").chars().next().unwrap();
+    let drop_action = captures.get(3).map(|s| s.as_str()).unwrap_or(" ").chars().next().unwrap_or('-');
     let modifier = captures.get(4).map(|s| s.as_str().parse().unwrap()).unwrap_or(0);
     (num_dice, num_sides, drop_action, modifier)
 }
