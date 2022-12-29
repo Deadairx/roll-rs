@@ -14,14 +14,14 @@ fn roll_dice(num_dice: u32, num_sides: u32, modifier: i32) -> i32 {
 fn parse_dice_notation(notation: &str) -> (u32, u32, i32) {
     let parts: Vec<&str> = notation.split("d").collect();
     let num_dice = parts[0].parse().unwrap();
-    let mut num_sides = 0;
+    let num_sides;
     let mut modifier: i32 = 0;
     if let Some(index) = parts[1].find('+') {
         num_sides = parts[1][..index].parse().unwrap();
         modifier = parts[1][index + 1..].parse().unwrap();
     } else if let Some(index) = parts[1].find('-') {
         num_sides = parts[1][..index].parse().unwrap();
-        modifier = -1 * parts[1][index + 1..].parse().unwrap();
+        modifier = -1 * parts[1][index + 1..].parse::<i32>().unwrap() as i32;
     } else {
         num_sides = parts[1].parse().unwrap();
     }
